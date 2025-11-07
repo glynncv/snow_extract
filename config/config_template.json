@@ -1,0 +1,17 @@
+{
+  "servicenow": {
+    "instance_url": "https://your-instance.service-now.com",
+    "username": "your_username",
+    "password": "your_password_or_token",
+    "timeout": 30
+  },
+  "extraction": {
+    "batch_size": 1000,
+    "output_format": "csv",
+    "include_attachments": false
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}
