@@ -15,6 +15,13 @@ import sys
 from pathlib import Path
 import requests
 from typing import Optional, Dict, Any
+import argparse
+
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    pass
 
 # Add src directory to path for imports
 script_dir = Path(__file__).parent
@@ -36,20 +43,25 @@ logger = logging.getLogger(__name__)
 class ServiceNowExtractor:
     """Main class for ServiceNow data extraction and processing"""
     
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[str] = None, verify_ssl: bool = True):
         """
         Initialize the extractor
         
         Args:
             config_path: Optional path to configuration file
+            verify_ssl: If False, disable SSL certificate verification (not recommended for production)
         """
         self.config = config
+        self.verify_ssl = verify_ssl
         self.session = None
         self.auth = None
         self.headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }
+        
+        if not verify_ssl:
+            logger.warning("SSL certificate verification is disabled. This is not recommended for production use.")
     
     def connect_to_servicenow(self) -> bool:
         """
@@ -75,7 +87,7 @@ class ServiceNowExtractor:
             
             # Test connection
             test_url = f"{instance_url}/api/now/table/incident"
-            response = self.session.get(test_url, params={'sysparm_limit': 1}, timeout=30)
+            response = self.session.get(test_url, params={'sysparm_limit': 1}, timeout=30, verify=self.verify_ssl)
             response.raise_for_status()
             
             logger.info("Successfully connected to ServiceNow")
@@ -159,7 +171,7 @@ class ServiceNowExtractor:
         }
         
         try:
-            response = self.session.get(url, params=params)
+            response = self.session.get(url, params=params, verify=self.verify_ssl)
             response.raise_for_status()
             
             data = response.json()
@@ -406,10 +418,17 @@ class ServiceNowExtractor:
 
 def main():
     """Main execution function"""
-    extractor = ServiceNowExtractor()
+    parser = argparse.ArgumentParser(description='ServiceNow Data Extraction')
+    parser.add_argument('--use-api', action='store_true', 
+                       help='Use ServiceNow API instead of sample data')
+    parser.add_argument('--no-verify-ssl', action='store_true',
+                       help='Disable SSL certificate verification (use for corporate environments with certificate issues)')
+    args = parser.parse_args()
     
-    # Run with sample data (change to True for real API)
-    success = extractor.run_extraction(use_api=False)
+    extractor = ServiceNowExtractor(verify_ssl=not args.no_verify_ssl)
+    
+    # Run with API or sample data
+    success = extractor.run_extraction(use_api=args.use_api)
     
     if success:
         print("\nExtraction completed successfully!")

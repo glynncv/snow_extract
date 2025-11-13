@@ -15,6 +15,12 @@ import sys
 from pathlib import Path
 import requests
 
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    pass
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -262,10 +268,16 @@ def main():
 
 # Additional utility functions for real ServiceNow API integration
 
-def connect_to_servicenow_api(instance_url, username, password):
+def connect_to_servicenow_api(instance_url, username, password, verify_ssl=True):
     """
     Example function for connecting to ServiceNow REST API
     Note: In production, use OAuth or other secure authentication methods
+    
+    Args:
+        instance_url: ServiceNow instance URL
+        username: ServiceNow username
+        password: ServiceNow password
+        verify_ssl: If False, disable SSL certificate verification (not recommended for production)
     """
     import requests
     from requests.auth import HTTPBasicAuth
@@ -284,7 +296,7 @@ def connect_to_servicenow_api(instance_url, username, password):
     params = {'sysparm_limit': 1}
     
     try:
-        response = requests.get(test_url, auth=auth, headers=headers, params=params)
+        response = requests.get(test_url, auth=auth, headers=headers, params=params, verify=verify_ssl)
         response.raise_for_status()
         logger.info("Successfully connected to ServiceNow API")
         return auth, headers
@@ -292,9 +304,16 @@ def connect_to_servicenow_api(instance_url, username, password):
         logger.error(f"Failed to connect to ServiceNow API: {e}")
         return None, None
 
-def extract_incidents_from_api(instance_url, auth, headers, query_params=None):
+def extract_incidents_from_api(instance_url, auth, headers, query_params=None, verify_ssl=True):
     """
     Extract incident data from ServiceNow REST API
+    
+    Args:
+        instance_url: ServiceNow instance URL
+        auth: Authentication object
+        headers: Request headers
+        query_params: Optional query parameters
+        verify_ssl: If False, disable SSL certificate verification (not recommended for production)
     """
     url = f"{instance_url}/api/now/table/incident"
     
@@ -310,7 +329,7 @@ def extract_incidents_from_api(instance_url, auth, headers, query_params=None):
         default_params.update(query_params)
     
     try:
-        response = requests.get(url, auth=auth, headers=headers, params=default_params)
+        response = requests.get(url, auth=auth, headers=headers, params=default_params, verify=verify_ssl)
         response.raise_for_status()
         
         data = response.json()
