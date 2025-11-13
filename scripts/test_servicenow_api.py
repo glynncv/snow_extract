@@ -12,17 +12,30 @@ import json
 import os
 import logging
 from datetime import datetime
+import argparse
+
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    pass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def test_servicenow_connection():
+def test_servicenow_connection(verify_ssl=True):
     """
     Test connection to ServiceNow API and extract sample data
+    
+    Args:
+        verify_ssl: If False, disable SSL certificate verification
     """
     print("ServiceNow API Connection Test")
     print("=" * 40)
+    
+    if not verify_ssl:
+        print("⚠️  SSL certificate verification is disabled")
     
     # Get credentials from environment variables or config
     instance_url = os.getenv('SNOW_INSTANCE_URL', '')
@@ -57,7 +70,7 @@ def test_servicenow_connection():
         }
         
         logger.info("Making API request...")
-        response = requests.get(test_url, auth=auth, headers=headers, params=params, timeout=30)
+        response = requests.get(test_url, auth=auth, headers=headers, params=params, timeout=30, verify=verify_ssl)
         
         # Check response
         if response.status_code == 200:
@@ -116,12 +129,13 @@ def test_servicenow_connection():
         print(f"❌ Unexpected error: {e}")
         return False
 
-def extract_network_incidents(sample_size=10):
+def extract_network_incidents(sample_size=10, verify_ssl=True):
     """
     Extract network-related incidents from ServiceNow
     
     Args:
         sample_size: Number of incidents to extract
+        verify_ssl: If False, disable SSL certificate verification
         
     Returns:
         pd.DataFrame: Network incidents data
@@ -149,7 +163,7 @@ def extract_network_incidents(sample_size=10):
         }
         
         logger.info(f"Extracting {sample_size} network incidents...")
-        response = requests.get(url, auth=auth, headers=headers, params=params, timeout=30)
+        response = requests.get(url, auth=auth, headers=headers, params=params, timeout=30, verify=verify_ssl)
         response.raise_for_status()
         
         data = response.json()
@@ -167,13 +181,16 @@ def extract_network_incidents(sample_size=10):
         logger.error(f"Error extracting network incidents: {e}")
         return pd.DataFrame()
 
-def save_sample_data():
+def save_sample_data(verify_ssl=True):
     """
     Extract sample data and save to local file for testing
+    
+    Args:
+        verify_ssl: If False, disable SSL certificate verification
     """
     print("\n📥 Extracting sample network incidents...")
     
-    df = extract_network_incidents(sample_size=20)
+    df = extract_network_incidents(sample_size=20, verify_ssl=verify_ssl)
     
     if not df.empty:
         # Save to data directory
@@ -201,12 +218,17 @@ def save_sample_data():
 
 def main():
     """Main test function"""
+    parser = argparse.ArgumentParser(description='Test ServiceNow API Connection')
+    parser.add_argument('--no-verify-ssl', action='store_true', 
+                       help='Disable SSL certificate verification (use for corporate environments with certificate issues)')
+    args = parser.parse_args()
+    
     # Test basic connection
-    connection_success = test_servicenow_connection()
+    connection_success = test_servicenow_connection(verify_ssl=not args.no_verify_ssl)
     
     if connection_success:
         # Try to extract and save sample data
-        save_sample_data()
+        save_sample_data(verify_ssl=not args.no_verify_ssl)
         
         print("\n🎉 ServiceNow API test completed!")
         print("\nNext steps:")
@@ -216,6 +238,7 @@ def main():
     else:
         print("\n❌ API test failed")
         print("Fix the connection issues before proceeding")
+        print("Try using --no-verify-ssl if you're in a corporate environment with certificate issues")
 
 if __name__ == "__main__":
     main()

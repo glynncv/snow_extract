@@ -17,6 +17,12 @@ import sys
 from pathlib import Path
 import argparse
 
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    pass
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -32,13 +38,14 @@ class RealDataServiceNowExtractor:
     ServiceNow extractor designed to work with your real data pipeline
     """
     
-    def __init__(self, use_api=False, config_path=None):
+    def __init__(self, use_api=False, config_path=None, verify_ssl=True):
         self.original_file = r"C:\Users\cglynn\myPython\pii-redaction-utility\data\archive\IM_Network_EMEA_2025.csv"
         self.redacted_file = r"C:\Users\cglynn\myPython\pii-redaction-utility\data\processed\IM_Network_EMEA_2025_redacted_clean.csv"
         self.processed_file = r"C:\Users\cglynn\myPython\Networks_IM_2025\data\processed\IM_Network_EMEA_2025_redacted_clean_analysed.csv"
         
         # ServiceNow API connection settings
         self.use_api = use_api
+        self.verify_ssl = verify_ssl
         self.session = None
         self.auth = None
         
@@ -108,7 +115,7 @@ class RealDataServiceNowExtractor:
             timeout = self.config.get('servicenow', {}).get('timeout', 30)
             
             logger.info(f"Testing connection to: {instance_url}")
-            response = self.session.get(test_url, params={'sysparm_limit': 1}, timeout=timeout)
+            response = self.session.get(test_url, params={'sysparm_limit': 1}, timeout=timeout, verify=self.verify_ssl)
             response.raise_for_status()
             
             logger.info("Successfully connected to ServiceNow API")
@@ -151,7 +158,7 @@ class RealDataServiceNowExtractor:
             logger.info(f"Extracting {sample_size} incidents from ServiceNow API...")
             logger.info(f"Query filter: {query_filter}")
             
-            response = self.session.get(url, params=params)
+            response = self.session.get(url, params=params, verify=self.verify_ssl)
             response.raise_for_status()
             
             data = response.json()
@@ -630,11 +637,12 @@ def main():
     parser.add_argument('--api', action='store_true', help='Use ServiceNow API instead of local files')
     parser.add_argument('--sample-size', type=int, default=100, help='Number of records to process (default: 100)')
     parser.add_argument('--config', type=str, help='Path to configuration file')
+    parser.add_argument('--no-verify-ssl', action='store_true', help='Disable SSL certificate verification (use for corporate environments with certificate issues)')
     
     args = parser.parse_args()
     
     # Create extractor
-    extractor = RealDataServiceNowExtractor(use_api=args.api, config_path=args.config)
+    extractor = RealDataServiceNowExtractor(use_api=args.api, config_path=args.config, verify_ssl=not args.no_verify_ssl)
     
     # Show configuration
     print("Configuration:")
