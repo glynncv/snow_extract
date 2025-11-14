@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snow-analytics"
+version = "1.0.0"
+description = "Comprehensive toolkit for ServiceNow incident data analysis"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "ServiceNow Analytics Team", email = "analytics@company.com"}
+]
+dependencies = [
+    "pandas>=1.5.0",
+    "numpy>=1.24.0",
+    "requests>=2.28.0",
+    "python-dotenv>=0.19.0",
+    "pyyaml>=6.0",
+    "openpyxl>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+]
+viz = [
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+]
+notebooks = [
+    "jupyter>=1.0.0",
+    "ipython>=8.0.0",
+]
+
+[project.scripts]
+snow-analytics = "snow_analytics.cli.main:main"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = "-v --cov=snow_analytics --cov-report=html --cov-report=term"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

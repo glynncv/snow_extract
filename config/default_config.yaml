@@ -1,0 +1,88 @@
+# ServiceNow Analytics - Default Configuration
+# ===========================================
+
+servicenow:
+  instance_url: "${SNOW_INSTANCE_URL}"
+  username: "${SNOW_USERNAME}"
+  password: "${SNOW_PASSWORD}"
+  timeout: 30
+
+extraction:
+  batch_size: 1000
+  output_format: "csv"
+  include_attachments: false
+  query_filter: "assignment_groupLIKEnetwork^state!=6"
+
+sla:
+  rules:
+    "1 - Critical": 4      # 4 hours
+    "2 - High": 24         # 24 hours
+    "3 - Moderate": 72     # 72 hours (3 days)
+    "4 - Low": 120         # 120 hours (5 days)
+
+categorization:
+  rules:
+    "WiFi/Wireless":
+      - "wifi"
+      - "wireless"
+      - "access point"
+      - "wap"
+      - "ssid"
+    "VPN/Remote Access":
+      - "vpn"
+      - "remote"
+      - "zscaler"
+      - "remote access"
+      - "remote desktop"
+    "Network Printing":
+      - "printer"
+      - "print"
+      - "printing"
+      - "print queue"
+    "Server/Performance":
+      - "server"
+      - "performance"
+      - "slow"
+      - "clearcase"
+      - "application"
+    "DNS/Resolution":
+      - "dns"
+      - "resolution"
+      - "name resolution"
+      - "nslookup"
+    "Firewall/Security":
+      - "firewall"
+      - "blocked"
+      - "security"
+      - "access denied"
+    "Connectivity":
+      - "connectivity"
+      - "connection"
+      - "network"
+      - "ping"
+      - "unreachable"
+    "Hardware":
+      - "hardware"
+      - "device"
+      - "router"
+      - "switch"
+      - "equipment failure"
+
+quality:
+  min_description_length: 20
+  max_reassignment_threshold: 3
+  on_hold_threshold_hours: 72
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+paths:
+  output_dir: "output"
+  logs_dir: "logs"
+  data_dir: "data"
+
+redaction:
+  enabled: true
+  hash_salt: "snow_extract_2025"
+  redaction_char: "X"
