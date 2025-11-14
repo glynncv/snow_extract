@@ -15,23 +15,35 @@ import base64
 import urllib.parse
 from requests_oauthlib import OAuth2Session
 import webbrowser
+import argparse
+
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    pass
 
 class ServiceNowSSOConnector:
     """ServiceNow API connector with Microsoft SSO support"""
     
-    def __init__(self, instance_url, auth_method='oauth', **auth_params):
+    def __init__(self, instance_url, auth_method='oauth', verify_ssl=True, **auth_params):
         """
         Initialize ServiceNow connection with SSO
         
         Args:
             instance_url: Your ServiceNow instance URL
             auth_method: 'oauth', 'api_key', or 'basic'
+            verify_ssl: If False, disable SSL certificate verification (not recommended for production)
             **auth_params: Authentication parameters based on method
         """
         self.instance_url = instance_url.rstrip('/')
         self.auth_method = auth_method
+        self.verify_ssl = verify_ssl
         self.session = requests.Session()
         self.access_token = None
+        
+        if not verify_ssl:
+            print("WARNING: SSL certificate verification is disabled. This is not recommended for production use.")
         
         # Common headers
         self.headers = {
@@ -133,7 +145,7 @@ class ServiceNowSSOConnector:
         }
         
         try:
-            response = requests.post(device_code_url, data=device_code_data)
+            response = requests.post(device_code_url, data=device_code_data, verify=self.verify_ssl)
             response.raise_for_status()
             
             device_info = response.json()
@@ -156,7 +168,7 @@ class ServiceNowSSOConnector:
             for _ in range(device_info['expires_in'] // interval):
                 time.sleep(interval)
                 
-                token_response = requests.post(token_url, data=token_data)
+                token_response = requests.post(token_url, data=token_data, verify=self.verify_ssl)
                 token_result = token_response.json()
                 
                 if 'access_token' in token_result:
@@ -194,7 +206,8 @@ class ServiceNowSSOConnector:
                 url, 
                 headers=self.headers, 
                 params=params,
-                timeout=30
+                timeout=30,
+                verify=self.verify_ssl
             )
             
             if response.status_code == 200:
@@ -236,7 +249,8 @@ class ServiceNowSSOConnector:
                 url,
                 headers=self.headers,
                 params=params,
-                timeout=60
+                timeout=60,
+                verify=self.verify_ssl
             )
             
             if response.status_code == 200:
@@ -351,6 +365,7 @@ def main():
             snow = ServiceNowSSOConnector(
                 INSTANCE_URL, 
                 auth_method='oauth',
+                verify_ssl=not args.no_verify_ssl,
                 client_id=client_id,
                 client_secret=client_secret
             )
@@ -366,6 +381,7 @@ def main():
             snow = ServiceNowSSOConnector(
                 INSTANCE_URL, 
                 auth_method='api_key',
+                verify_ssl=not args.no_verify_ssl,
                 api_key=api_key
             )
             
@@ -381,6 +397,7 @@ def main():
             snow = ServiceNowSSOConnector(
                 INSTANCE_URL, 
                 auth_method='basic',
+                verify_ssl=not args.no_verify_ssl,
                 username=username,
                 password=password
             )
@@ -396,6 +413,7 @@ def main():
                 snow = ServiceNowSSOConnector(
                     instance_url, 
                     auth_method='oauth',
+                    verify_ssl=not args.no_verify_ssl,
                     client_id=client_id,
                     client_secret=client_secret
                 )
@@ -404,6 +422,7 @@ def main():
                 snow = ServiceNowSSOConnector(
                     instance_url, 
                     auth_method='api_key',
+                    verify_ssl=not args.no_verify_ssl,
                     api_key=api_key
                 )
             else:
