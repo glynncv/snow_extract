@@ -9,6 +9,8 @@ This repository has been **completely refactored** from exploratory Python scrip
 **Refactored Files:** 18 scripts → 25+ organized modules
 **Lines of Code:** ~3,500 (old) → ~4,500 (new, with tests & docs)
 
+> **Update (2025-11-15):** Privacy module removed from core package. PII redaction (`src/redact5.py`) is now a separate utility for external data sharing only. Internal ITSM analysis uses full, unredacted data.
+
 ---
 
 ## What Was Refactored
@@ -145,28 +147,24 @@ df = transform_incidents(df_raw)
 df = transform_incidents(df_raw, transformations=['dates', 'status', 'sla'])
 ```
 
-### 3. **PII Redaction** (`privacy/redaction.py`)
+### 3. **PII Redaction** (Separate Utility - `src/redact5.py`)
 
-**Refactored from:**
-- `redact5.py`
+**Status:** Kept as separate utility (not part of core package)
 
-**Improvements:**
-- Cleaner API
-- Better validation
-- Separated patterns into separate module
-- More comprehensive redaction
+**Usage:**
+- For internal ITSM analysis: Use full, unredacted data
+- For external sharing: Use `src/redact5.py` as a post-processing step
 
 **Example:**
 ```python
-# Simple
-df_redacted = redact_dataframe(df)
+# Internal analysis - NO redaction
+df = load_incidents('api')
+df = transform_incidents(df)
+metrics = calculate_sla_metrics(df)
 
-# Custom
-df_redacted = redact_dataframe(
-    df,
-    text_columns=['description'],
-    drop_columns=['caller_id']
-)
+# External sharing - export then redact separately
+df.to_csv('data_to_share.csv')
+# Then run: python src/redact5.py data_to_share.csv
 ```
 
 ### 4. **ServiceNow API Client** (`connectors/api.py`)
@@ -354,15 +352,15 @@ pip install -e .
 from snow_analytics import (
     load_incidents,
     transform_incidents,
-    calculate_sla_metrics,
-    redact_dataframe
+    calculate_sla_metrics
 )
 
-# Load → Transform → Analyze → Redact
+# Load → Transform → Analyze (internal use - no redaction)
 df = load_incidents('sample', num_records=100)
 df = transform_incidents(df)
 metrics = calculate_sla_metrics(df)
-df_redacted = redact_dataframe(df)
+
+# For external sharing, use src/redact5.py separately
 ```
 
 ---
@@ -426,9 +424,7 @@ Old scripts in `scripts/` folder still work but are **deprecated**. They will be
 - `snow_analytics/analysis/metrics.py` (321 lines)
 - `snow_analytics/analysis/quality.py` (136 lines)
 - `snow_analytics/analysis/patterns.py` (88 lines)
-- `snow_analytics/privacy/__init__.py`
-- `snow_analytics/privacy/redaction.py` (242 lines)
-- `snow_analytics/privacy/patterns.py`
+- `src/redact5.py` (208 lines - kept as separate utility)
 
 ### Configuration & Setup
 - `setup.py`

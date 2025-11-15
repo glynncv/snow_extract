@@ -9,8 +9,7 @@ from snow_analytics import (
     load_incidents,
     transform_incidents,
     calculate_sla_metrics,
-    analyze_resolution_times,
-    redact_dataframe
+    analyze_resolution_times
 )
 from snow_analytics.core import Config
 import logging
@@ -66,23 +65,19 @@ def main():
     print(f"   Average resolution time: {resolution_analysis['overall']['mean_hrs']:.1f} hours")
     print(f"   Median resolution time: {resolution_analysis['overall']['median_hrs']:.1f} hours")
 
-    # Step 5: Redact PII
-    print("\n5. Redacting PII...")
-    df_redacted = redact_dataframe(df_transformed)
-
-    print(f"   Redacted {len(df_redacted)} records")
-
-    # Step 6: Save results
-    print("\n6. Saving results...")
+    # Step 5: Save results
+    print("\n5. Saving results...")
 
     output_dir = "output"
     import os
     os.makedirs(output_dir, exist_ok=True)
 
     df_transformed.to_csv(f"{output_dir}/incidents_processed_example.csv", index=False)
-    df_redacted.to_csv(f"{output_dir}/incidents_redacted_example.csv", index=False)
 
     print(f"   Saved to {output_dir}/")
+
+    # Note: For PII redaction when sharing data externally,
+    # use the separate redaction utility (src/redact5.py)
 
     print("\n" + "="*70)
     print("✅ Pipeline complete!")

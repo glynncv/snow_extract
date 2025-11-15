@@ -14,8 +14,7 @@ from snow_analytics import (
     transform_incidents,
     calculate_sla_metrics,
     analyze_resolution_times,
-    calculate_backlog_metrics,
-    redact_dataframe
+    calculate_backlog_metrics
 )
 from snow_analytics.analysis import (
     analyze_patterns,
@@ -329,10 +328,8 @@ def use_case_6_executive_dashboard():
     df = load_incidents('sample', num_records=500)
     df = transform_incidents(df)
 
-    # Redact PII for business stakeholders
-    df_redacted = redact_dataframe(df)
-
     # Calculate key metrics
+    # Note: For PII redaction when sharing externally, use src/redact5.py
     sla_metrics = calculate_sla_metrics(df)
     resolution_analysis = analyze_resolution_times(df)
     backlog = calculate_backlog_metrics(df)
@@ -375,13 +372,14 @@ def use_case_6_executive_dashboard():
 
     print("\n" + "="*70)
 
-    # Save redacted data for distribution
-    print(f"\n💾 Saving redacted data for business stakeholders...")
-    df_redacted[['number', 'priority', 'patternCategory', 'state', 'resolutionTimeHrs']].head(20).to_csv(
+    # Save summary data for distribution
+    print(f"\n💾 Saving executive summary data...")
+    df[['number', 'priority', 'patternCategory', 'state', 'resolutionTimeHrs']].head(20).to_csv(
         'output/executive_summary_data.csv',
         index=False
     )
     print(f"   ✅ Saved to output/executive_summary_data.csv")
+    print(f"   Note: For external distribution, run src/redact5.py on exported files")
 
 
 def main():

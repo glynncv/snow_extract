@@ -30,6 +30,8 @@ This repository has been **completely refactored** from exploratory scripts into
 ✅ Extensive documentation
 ```
 
+> **Note on PII Redaction:** The privacy module has been removed from the core package. For internal ITSM analysis, use full, unredacted data. For PII redaction when sharing data externally, use the separate redaction utility (`src/redact5.py`).
+
 ---
 
 ## Installation
@@ -96,7 +98,6 @@ sla:
 
 ```python
 from snow_analytics import load_incidents, transform_incidents, calculate_sla_metrics
-from snow_analytics import redact_dataframe
 
 # Load incidents from ServiceNow API
 df_raw = load_incidents(source='api', limit=1000)
@@ -114,12 +115,10 @@ df_transformed = transform_incidents(df_raw)
 sla_metrics = calculate_sla_metrics(df_transformed)
 print(f"SLA Breach Rate: {sla_metrics['breach_rate_pct']}%")
 
-# Redact PII
-df_redacted = redact_dataframe(df_transformed)
-
 # Save results
 df_transformed.to_csv('output/incidents_processed.csv', index=False)
-df_redacted.to_csv('output/incidents_redacted.csv', index=False)
+
+# Note: For PII redaction when sharing externally, use src/redact5.py
 ```
 
 ### 3. CLI Usage
@@ -157,10 +156,6 @@ snow_analytics/                    # Main package
 │   ├── metrics.py                # KPI calculations (SLA, resolution, backlog)
 │   ├── quality.py                # Quality checks
 │   └── patterns.py               # Pattern detection
-│
-├── privacy/                       # PII handling
-│   ├── redaction.py              # PII redaction
-│   └── patterns.py               # Redaction patterns
 │
 ├── connectors/                    # ServiceNow connectivity
 │   ├── api.py                    # REST API client
@@ -265,26 +260,28 @@ df = flag_excessive_reassignments(df, threshold=3)
 quality_issues = df_quality[df_quality['quality_issues_count'] > 0]
 ```
 
-### 5. **PII Redaction**
+### 5. **PII Redaction** (External Utility)
+
+For PII redaction when sharing data externally, use the separate redaction utility:
 
 ```python
-from snow_analytics import redact_dataframe, validate_redaction
+# Export your data first
+df_transformed.to_csv('output/incidents_for_sharing.csv', index=False)
 
-# Redact with defaults
-df_redacted = redact_dataframe(df)
+# Then run the redaction utility
+from src.redact5 import redact_dataframe_columns
 
-# Custom redaction
-df_redacted = redact_dataframe(
+df_redacted = redact_dataframe_columns(
     df,
     text_columns=['description', 'work_notes'],
     id_columns=['number'],
     drop_columns=['caller_id', 'assigned_to']
 )
 
-# Validate redaction
-validation = validate_redaction(df_original, df_redacted)
-print(f"Redaction successful: {validation['redaction_successful']}")
+df_redacted.to_csv('output/incidents_redacted.csv', index=False)
 ```
+
+**Note:** Internal ITSM analysis should use full, unredacted data. Only redact when data leaves organizational control.
 
 ### 6. **Root Cause Analysis**
 
@@ -384,7 +381,7 @@ See the `examples/` directory for complete usage examples:
 |----------|-----------|---------------|
 | `real_data_extraction.py` | `core/loaders.py` | `load_from_api()`, `load_from_csv()` |
 | `network_incident_etl.py` | `core/transform.py` | `transform_incidents()`, `calculate_durations()` |
-| `redact5.py` | `privacy/redaction.py` | `redact_dataframe()`, `hash_ids()` |
+| `redact5.py` | `src/redact5.py` (separate utility) | `redact_dataframe_columns()`, `hash_id()` |
 | `config_manager.py` | `core/config.py` | `Config` class (enhanced) |
 | `rca_generator.py` | `rca/generator.py` | `RCAGenerator` class (refactored) |
 | `rca_report_formatter.py` | `rca/formatter.py` | `RCAReportFormatter` class |
@@ -396,8 +393,8 @@ See the `examples/` directory for complete usage examples:
 3. **Column naming** - Standardized to `openedDate`, `resolvedDate` (was inconsistent)
 4. **API changes**:
    - `transform_incident_frame()` → `transform_incidents()`
-   - `redact_dataframe_columns()` → `redact_dataframe()`
    - ServiceNow API client now in `connectors.api.ServiceNowAPI`
+5. **Privacy module removed** - Use `src/redact5.py` directly for external data sharing
 
 ---
 
@@ -422,12 +419,15 @@ df_redacted = redact_dataframe_columns(df)
 **New:**
 ```python
 # New clean imports
-from snow_analytics import load_incidents, transform_incidents, redact_dataframe
+from snow_analytics import load_incidents, transform_incidents
 
 # New usage with configuration
 df = load_incidents('csv', file_path='data/incidents.csv')
 df_transformed = transform_incidents(df)
-df_redacted = redact_dataframe(df_transformed)
+
+# For external sharing, use separate redaction utility:
+# from src.redact5 import redact_dataframe_columns
+# df_redacted = redact_dataframe_columns(df_transformed)
 ```
 
 ---

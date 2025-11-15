@@ -7,10 +7,10 @@ A comprehensive toolkit for extracting, processing, and analyzing ServiceNow inc
 Main modules:
 - core: Data loading, transformation, and validation
 - analysis: Metrics, quality checks, and pattern detection
-- privacy: PII redaction and data anonymization
-- rca: Root cause analysis generation
 - connectors: ServiceNow API integration
 - cli: Command-line interface
+
+Note: For PII redaction when sharing data externally, use the separate redaction utility (src/redact5.py)
 
 Version: 1.0.0
 """
@@ -26,9 +26,6 @@ from snow_analytics.core.config import Config
 # Analysis
 from snow_analytics.analysis.metrics import calculate_sla_metrics, analyze_resolution_times
 
-# Privacy
-from snow_analytics.privacy.redaction import redact_dataframe, validate_redaction
-
 __all__ = [
     # Version
     "__version__",
@@ -43,8 +40,4 @@ __all__ = [
     # Analysis
     "calculate_sla_metrics",
     "analyze_resolution_times",
-
-    # Privacy
-    "redact_dataframe",
-    "validate_redaction",
 ]
