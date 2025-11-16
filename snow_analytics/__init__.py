@@ -7,6 +7,7 @@ A comprehensive toolkit for extracting, processing, and analyzing ServiceNow inc
 Main modules:
 - core: Data loading, transformation, and validation
 - analysis: Metrics, quality checks, and pattern detection
+- reporting: Export utilities and report templates
 - connectors: ServiceNow API integration
 - cli: Command-line interface
 
@@ -26,6 +27,17 @@ from snow_analytics.core.config import Config
 # Analysis
 from snow_analytics.analysis.metrics import calculate_sla_metrics, analyze_resolution_times
 
+# Reporting
+from snow_analytics.reporting import (
+    export_to_csv,
+    export_to_excel,
+    export_to_json,
+    generate_sla_report,
+    generate_backlog_report,
+    generate_executive_summary,
+    generate_quality_report
+)
+
 __all__ = [
     # Version
     "__version__",
@@ -40,4 +52,15 @@ __all__ = [
     # Analysis
     "calculate_sla_metrics",
     "analyze_resolution_times",
+
+    # Reporting - Exporters
+    "export_to_csv",
+    "export_to_excel",
+    "export_to_json",
+
+    # Reporting - Reports
+    "generate_sla_report",
+    "generate_backlog_report",
+    "generate_executive_summary",
+    "generate_quality_report",
 ]
