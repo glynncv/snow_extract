@@ -80,18 +80,18 @@ def main():
     # use the separate redaction utility (src/redact5.py)
 
     print("\n" + "="*70)
-    print("✅ Pipeline complete!")
+    print("[SUCCESS] Pipeline complete!")
     print("="*70)
 
     # Display summary statistics
-    print("\n📊 Summary Statistics:")
+    print("\nSummary Statistics:")
     print(f"   Total incidents: {len(df_transformed)}")
     print(f"   Active incidents: {df_transformed['isActive'].sum()}")
     print(f"   Resolved incidents: {df_transformed['isResolved'].sum()}")
     print(f"   High impact incidents: {df_transformed['isHighImpact'].sum()}")
 
     if 'patternCategory' in df_transformed.columns:
-        print("\n📋 Incident Categories:")
+        print("\nIncident Categories:")
         for category, count in df_transformed['patternCategory'].value_counts().head().items():
             pct = (count / len(df_transformed)) * 100
             print(f"   {category}: {count} ({pct:.1f}%)")

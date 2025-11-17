@@ -162,9 +162,17 @@ def export_to_json(
         logger.info(f"Exported {len(data)} records to {output_path}")
 
     elif isinstance(data, dict):
-        # Dict to JSON
-        with open(output_path, 'w') as f:
-            json.dump(data, f, indent=indent, **kwargs)
+        # Dict to JSON - handle Timestamp objects and NaT
+        def json_serializer(obj):
+            """JSON serializer for objects not serializable by default json code"""
+            if isinstance(obj, pd.Timestamp):
+                return obj.isoformat()
+            elif pd.isna(obj):  # Handle NaT, NaN, None
+                return None
+            raise TypeError(f"Type {type(obj)} not serializable")
+        
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=indent, default=json_serializer, **kwargs)
         logger.info(f"Exported dictionary to {output_path}")
 
     else:

@@ -46,12 +46,12 @@ def main():
     # Export to CSV
     print("\n   a) Exporting to CSV...")
     export_to_csv(df, 'output/incidents.csv')
-    print("      ✓ CSV export complete")
+    print("      [OK] CSV export complete")
 
     # Export to Excel (single sheet)
     print("\n   b) Exporting to Excel (single sheet)...")
     export_to_excel(df, 'output/incidents.xlsx', sheet_name='All Incidents')
-    print("      ✓ Excel export complete")
+    print("      [OK] Excel export complete")
 
     # Export to Excel (multiple sheets)
     print("\n   c) Exporting to Excel (multiple sheets)...")
@@ -61,12 +61,12 @@ def main():
         'High Priority': df[df['priority'].isin(['1 - Critical', '2 - High'])]
     }
     export_to_excel(sheets, 'output/incidents_multi_sheet.xlsx')
-    print("      ✓ Multi-sheet Excel export complete")
+    print("      [OK] Multi-sheet Excel export complete")
 
     # Export to JSON
     print("\n   d) Exporting to JSON...")
     export_to_json(df, 'output/incidents.json', orient='records')
-    print("      ✓ JSON export complete")
+    print("      [OK] JSON export complete")
 
     # ========================================================================
     # PRE-BUILT REPORTS
@@ -78,22 +78,22 @@ def main():
     # SLA Report
     print("\n   a) Generating SLA Compliance Report...")
     generate_sla_report(df, 'output/sla_report.xlsx')
-    print("      ✓ SLA report generated (multi-sheet Excel)")
+    print("      [OK] SLA report generated (multi-sheet Excel)")
 
     # Backlog Report
     print("\n   b) Generating Backlog Report...")
     generate_backlog_report(df, 'output/backlog_report.xlsx')
-    print("      ✓ Backlog report generated")
+    print("      [OK] Backlog report generated")
 
     # Quality Report
     print("\n   c) Generating Quality Report...")
     generate_quality_report(df, 'output/quality_report.xlsx')
-    print("      ✓ Quality report generated")
+    print("      [OK] Quality report generated")
 
     # Executive Summary
     print("\n   d) Generating Executive Summary...")
     generate_executive_summary(df, 'output/executive_summary.xlsx')
-    print("      ✓ Executive summary generated")
+    print("      [OK] Executive summary generated")
 
     # ========================================================================
     # JSON REPORTS (for API integration)
@@ -104,21 +104,21 @@ def main():
 
     print("\n   a) Generating SLA Report (JSON)...")
     generate_sla_report(df, 'output/sla_report.json', format='json')
-    print("      ✓ JSON SLA report generated")
+    print("      [OK] JSON SLA report generated")
 
     print("\n   b) Generating Executive Summary (JSON)...")
     generate_executive_summary(df, 'output/executive_summary.json', format='json')
-    print("      ✓ JSON executive summary generated")
+    print("      [OK] JSON executive summary generated")
 
     # ========================================================================
     # SUMMARY
     # ========================================================================
 
     print("\n" + "="*70)
-    print("✅ All reports generated successfully!")
+    print("[SUCCESS] All reports generated successfully!")
     print("="*70)
 
-    print("\n📂 Output Files:")
+    print("\nOutput Files:")
     print("   CSV:")
     print("     - output/incidents.csv")
     print("\n   Excel:")
@@ -133,7 +133,7 @@ def main():
     print("     - output/sla_report.json")
     print("     - output/executive_summary.json")
 
-    print("\n💡 Tips:")
+    print("\nTips:")
     print("   - Use Excel reports for manual analysis and stakeholder sharing")
     print("   - Use JSON reports for API integration and automation")
     print("   - CSV exports are ideal for importing into other tools")

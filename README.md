@@ -39,28 +39,57 @@ python scripts\test_servicenow_api.py
 
 ## 🔧 Usage Examples
 
-### Extract from ServiceNow API
+### Quick Start Examples
+
+The `examples/` directory contains three demonstration scripts:
+
+#### 1. Basic Usage (`examples/basic_usage.py`)
+Simple workflow demonstration - perfect for getting started:
+```powershell
+python examples\basic_usage.py
+```
+Shows: Data loading → Transformation → Metrics → Export
+
+#### 2. ITSM Use Cases (`examples/itsm_use_cases.py`)
+Real-world scenarios for common ITSM operations:
+```powershell
+python examples\itsm_use_cases.py
+```
+Includes: SLA reports, backlog management, problem identification, quality checks, routing optimization, executive dashboards
+
+#### 3. Reporting Example (`examples/reporting_example.py`)
+Export formats and pre-built report templates:
+```powershell
+python examples\reporting_example.py
+```
+Shows: CSV/Excel/JSON exports, SLA reports, backlog reports, quality reports, executive summaries
+
+### Legacy Scripts (Old Structure)
+
+> **Note:** The project has been refactored into a modular package. See `README_REFACTORED.md` for the new structure. The scripts below are from the old structure and may still work but are not recommended for new projects.
+
+#### Extract from ServiceNow API
 ```powershell
 # Extract 100 recent network incidents
-python real_data_extraction.py --api --sample-size 100
+python scripts\real_data_extraction.py --api --sample-size 100
 
 # Extract with custom filter
-python real_data_extraction.py --api --query "assignment_groupLIKEnetwork^priorityIN1,2"
+python scripts\real_data_extraction.py --api --query "assignment_groupLIKEnetwork^priorityIN1,2"
 ```
 
-### Process Local Files
+#### Process Local Files
 ```powershell
 # Process existing data file
-python real_data_extraction.py --file data\raw\incidents.csv
+python scripts\real_data_extraction.py --file data\raw\incidents.csv
 
 # Process with full ETL pipeline
-python real_data_extraction.py --file data\raw\incidents.csv --apply-etl --redact-pii
+python scripts\real_data_extraction.py --file data\raw\incidents.csv --apply-etl --redact-pii
 ```
 
-### Sample Data Testing
+#### Sample Data Testing
 ```powershell
 # Generate sample data for testing
-python servicenow_extraction_improved.py
+python scripts\servicenow_extraction_improved.py
 ```
 
 ## 📁 Project Structure

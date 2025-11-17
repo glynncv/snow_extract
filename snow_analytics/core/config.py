@@ -12,6 +12,13 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
 
+# Try to load .env file support
+try:
+    from dotenv import load_dotenv
+    DOTENV_AVAILABLE = True
+except ImportError:
+    DOTENV_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,8 +41,28 @@ class Config:
         Args:
             config_path: Path to configuration file (JSON or YAML)
         """
+        # Load .env file if available
+        self._load_env_file()
+        
         self.config_path = self._resolve_config_path(config_path)
         self.config = self._load_config()
+
+    def _load_env_file(self) -> None:
+        """Load environment variables from .env file if available."""
+        if not DOTENV_AVAILABLE:
+            return
+        
+        # Try loading .env from project root
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent.parent
+        
+        env_file = project_root / ".env"
+        if env_file.exists():
+            try:
+                load_dotenv(env_file, override=False)  # Don't override existing env vars
+                logger.debug(f"Loaded environment variables from: {env_file}")
+            except Exception as e:
+                logger.debug(f"Could not load .env file: {e}")
 
     def _resolve_config_path(self, config_path: Optional[str]) -> Optional[Path]:
         """Resolve configuration file path."""
@@ -75,12 +102,32 @@ class Config:
                 else:
                     config = json.load(f)
 
+            # Resolve environment variable placeholders (e.g., ${SNOW_INSTANCE_URL})
+            config = self._resolve_env_placeholders(config)
+
             logger.info("Configuration loaded successfully")
             return config
 
         except Exception as e:
             logger.warning(f"Error loading config file: {e}. Using defaults.")
             return self._get_default_config()
+
+    def _resolve_env_placeholders(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve environment variable placeholders in config values."""
+        if isinstance(config, dict):
+            return {k: self._resolve_env_placeholders(v) for k, v in config.items()}
+        elif isinstance(config, str) and config.startswith('${') and config.endswith('}'):
+            # Extract env var name (e.g., ${SNOW_INSTANCE_URL} -> SNOW_INSTANCE_URL)
+            env_var = config[2:-1]
+            env_value = os.getenv(env_var)
+            if env_value is not None:
+                return env_value
+            # If env var not found, return original placeholder
+            return config
+        elif isinstance(config, list):
+            return [self._resolve_env_placeholders(item) for item in config]
+        else:
+            return config
 
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default configuration."""

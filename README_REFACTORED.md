@@ -121,6 +121,8 @@ df_transformed.to_csv('output/incidents_processed.csv', index=False)
 # Note: For PII redaction when sharing externally, use src/redact5.py
 ```
 
+> **💡 Tip:** See `examples/basic_usage.py` for a complete working example of this workflow.
+
 ### 3. CLI Usage
 
 ```bash
@@ -367,9 +369,64 @@ pytest tests/test_transform.py::test_normalize_columns
 
 See the `examples/` directory for complete usage examples:
 
-- `examples/basic_extraction.py` - Simple extraction and analysis
-- `examples/full_pipeline.py` - Complete pipeline with all features
-- `examples/notebooks/exploratory_analysis.ipynb` - Interactive analysis
+### Basic Usage (`examples/basic_usage.py`)
+Demonstrates the fundamental workflow: loading data, transforming incidents, calculating metrics, and saving results. Perfect for getting started.
+
+```bash
+python examples/basic_usage.py
+```
+
+**What it shows:**
+- Loading incidents from sample data (can be switched to API or CSV)
+- Applying ETL transformations
+- Calculating SLA metrics and resolution times
+- Exporting processed data to CSV
+- Displaying summary statistics
+
+### ITSM Use Cases (`examples/itsm_use_cases.py`)
+Demonstrates 6 real-world ITSM scenarios with practical examples for common operational needs.
+
+```bash
+python examples/itsm_use_cases.py
+```
+
+**What it shows:**
+1. **Daily SLA Compliance Report** - Track SLA performance by priority
+2. **Incident Backlog Management** - Analyze active incidents and prioritize workload
+3. **Problem Candidate Identification** - Find recurring issues for Problem Records
+4. **Incident Quality Assurance** - Identify quality issues for training
+5. **Assignment Routing Optimization** - Improve first-time assignment accuracy
+6. **Executive Dashboard** - Monthly summary for leadership
+
+**Use when:** You need templates for common ITSM workflows and operational reporting.
+
+### Reporting Example (`examples/reporting_example.py`)
+Demonstrates all export formats and pre-built report templates. Shows how to generate reports in CSV, Excel, and JSON formats.
+
+```bash
+python examples/reporting_example.py
+```
+
+**What it shows:**
+- **Basic Exports:** CSV, Excel (single/multi-sheet), JSON
+- **Pre-built Reports:** SLA Report, Backlog Report, Quality Report, Executive Summary
+- **JSON Reports:** Machine-readable formats for API integration
+- **Format Selection:** When to use each format (Excel for stakeholders, JSON for automation)
+
+**Use when:** You need to export data or generate formatted reports for different audiences.
+
+### Quick Start with Examples
+
+```bash
+# 1. Start with basic usage to understand the workflow
+python examples/basic_usage.py
+
+# 2. See real-world use cases for your specific needs
+python examples/itsm_use_cases.py
+
+# 3. Learn how to export and generate reports
+python examples/reporting_example.py
+```
 
 ---
 

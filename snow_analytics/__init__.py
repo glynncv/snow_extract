@@ -25,7 +25,11 @@ from snow_analytics.core.transform import transform_incidents
 from snow_analytics.core.config import Config
 
 # Analysis
-from snow_analytics.analysis.metrics import calculate_sla_metrics, analyze_resolution_times
+from snow_analytics.analysis.metrics import (
+    calculate_sla_metrics,
+    analyze_resolution_times,
+    calculate_backlog_metrics
+)
 
 # Reporting
 from snow_analytics.reporting import (
@@ -52,6 +56,7 @@ __all__ = [
     # Analysis
     "calculate_sla_metrics",
     "analyze_resolution_times",
+    "calculate_backlog_metrics",
 
     # Reporting - Exporters
     "export_to_csv",

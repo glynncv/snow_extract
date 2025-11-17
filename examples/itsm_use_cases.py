@@ -62,20 +62,20 @@ def use_case_1_daily_sla_report():
     sla_metrics = calculate_sla_metrics(df_resolved)
 
     # Print report
-    print(f"\n📊 SLA Performance Report - {yesterday}")
+    print(f"\nSLA Performance Report - {yesterday}")
     print("-" * 70)
     print(f"Total Resolved Incidents: {sla_metrics['total_resolved']}")
     print(f"Met SLA: {sla_metrics['sla_met']} ({100 - sla_metrics['breach_rate_pct']:.1f}%)")
     print(f"Breached SLA: {sla_metrics['sla_breached']} ({sla_metrics['breach_rate_pct']:.1f}%)")
 
-    print(f"\n📈 SLA Performance by Priority:")
+    print(f"\nSLA Performance by Priority:")
     for priority, metrics in sla_metrics['by_priority'].items():
-        status = "✅" if metrics['breach_rate_pct'] < 10 else "⚠️" if metrics['breach_rate_pct'] < 20 else "❌"
+        status = "[OK]" if metrics['breach_rate_pct'] < 10 else "[WARNING]" if metrics['breach_rate_pct'] < 20 else "[FAIL]"
         print(f"  {status} {priority}: {metrics['breach_rate_pct']:.1f}% breach rate "
               f"({metrics['breached']}/{metrics['total']})")
 
     # Recommendations
-    print(f"\n💡 Recommendations:")
+    print(f"\nRecommendations:")
     if sla_metrics['breach_rate_pct'] > 15:
         print("  • SLA breach rate is above 15% - consider additional resources")
     if sla_metrics['by_priority'].get('1 - Critical', {}).get('breach_rate_pct', 0) > 5:
@@ -107,25 +107,25 @@ def use_case_2_backlog_management():
     backlog = calculate_backlog_metrics(df)
 
     # Print backlog summary
-    print(f"\n📋 Current Backlog Summary")
+    print(f"\nCurrent Backlog Summary")
     print("-" * 70)
     print(f"Total Active Incidents: {backlog['total_backlog']}")
     print(f"Average Age: {backlog['avg_age_days']:.1f} days")
 
-    print(f"\n⏰ Age Distribution:")
+    print(f"\nAge Distribution:")
     for age_range, count in backlog['by_age'].items():
         if count > 0:
             pct = (count / backlog['total_backlog']) * 100 if backlog['total_backlog'] > 0 else 0
-            status = "🟢" if "24h" in age_range else "🟡" if "3days" in age_range else "🔴"
+            status = "[OK]" if "24h" in age_range else "[WARNING]" if "3days" in age_range else "[FAIL]"
             print(f"  {status} {age_range}: {count} incidents ({pct:.1f}%)")
 
-    print(f"\n🎯 Priority Breakdown:")
+    print(f"\nPriority Breakdown:")
     for priority, count in sorted(backlog['by_priority'].items()):
         pct = (count / backlog['total_backlog']) * 100 if backlog['total_backlog'] > 0 else 0
         print(f"  {priority}: {count} incidents ({pct:.1f}%)")
 
     # Action items
-    print(f"\n✅ Action Items:")
+    print(f"\nAction Items:")
     old_incidents = backlog['by_age'].get('more_than_1month', 0)
     if old_incidents > 0:
         print(f"  • Review {old_incidents} incidents over 1 month old for closure/escalation")
@@ -159,7 +159,7 @@ def use_case_3_problem_candidate_identification():
     # Find recurring issues
     recurring = find_recurring_issues(df, min_occurrences=5)
 
-    print(f"\n🔍 Found {len(recurring)} recurring issue patterns")
+    print(f"\nFound {len(recurring)} recurring issue patterns")
     print("-" * 70)
 
     if recurring:
@@ -174,7 +174,7 @@ def use_case_3_problem_candidate_identification():
     # Analyze patterns
     patterns = analyze_patterns(df)
 
-    print(f"📊 Overall Incident Distribution:")
+    print(f"Overall Incident Distribution:")
     for category, count in sorted(patterns['category_distribution'].items(),
                                   key=lambda x: x[1], reverse=True)[:5]:
         pct = (count / len(df)) * 100
@@ -210,14 +210,14 @@ def use_case_4_quality_assurance():
     with_issues = (df_quality['quality_issues_count'] > 0).sum()
     quality_score = ((total - with_issues) / total) * 100
 
-    print(f"\n📊 Quality Assessment Summary")
+    print(f"\nQuality Assessment Summary")
     print("-" * 70)
     print(f"Total Incidents Analyzed: {total}")
     print(f"Incidents with Quality Issues: {with_issues} ({(with_issues/total)*100:.1f}%)")
     print(f"Overall Quality Score: {quality_score:.1f}%")
 
     # Breakdown by issue type
-    print(f"\n🔍 Quality Issues Breakdown:")
+    print(f"\nQuality Issues Breakdown:")
 
     quality_issues = {
         'Priority Misclassification': df_quality['quality_priority_mismatch'].sum(),
@@ -229,11 +229,11 @@ def use_case_4_quality_assurance():
     for issue_type, count in quality_issues.items():
         if count > 0:
             pct = (count / total) * 100
-            status = "🔴" if pct > 10 else "🟡" if pct > 5 else "🟢"
+            status = "[FAIL]" if pct > 10 else "[WARNING]" if pct > 5 else "[OK]"
             print(f"  {status} {issue_type}: {count} ({pct:.1f}%)")
 
     # Training recommendations
-    print(f"\n📚 Training Recommendations:")
+    print(f"\nTraining Recommendations:")
     if quality_issues['Poor Short Descriptions'] > total * 0.1:
         print("  • Conduct training on writing effective incident descriptions")
     if quality_issues['Priority Misclassification'] > total * 0.05:
@@ -271,14 +271,14 @@ def use_case_5_routing_optimization():
     total = len(df)
     efficiency = (first_time_success / total) * 100
 
-    print(f"\n📊 Routing Efficiency Metrics")
+    print(f"\nRouting Efficiency Metrics")
     print("-" * 70)
     print(f"Total Incidents: {total}")
     print(f"First-Time Assignment Success: {first_time_success} ({efficiency:.1f}%)")
     print(f"Required Reassignment: {total - first_time_success} ({100 - efficiency:.1f}%)")
 
     # Analyze by category
-    print(f"\n📈 Routing Success by Category:")
+    print(f"\nRouting Success by Category:")
 
     routing_by_category = df.groupby('patternCategory').agg({
         'reassignment_count': lambda x: (x == 0).sum() / len(x) * 100,
@@ -288,19 +288,19 @@ def use_case_5_routing_optimization():
     for category, row in routing_by_category.head(10).iterrows():
         success_rate = row['reassignment_count']
         count = int(row['number'])
-        status = "✅" if success_rate > 80 else "⚠️" if success_rate > 60 else "❌"
+        status = "[OK]" if success_rate > 80 else "[WARNING]" if success_rate > 60 else "[FAIL]"
         print(f"  {status} {category}: {success_rate:.1f}% first-time success ({count} incidents)")
 
     # Incidents with excessive reassignments
     if not reassignment_analysis.empty:
-        print(f"\n⚠️  Top Incidents with Excessive Reassignments:")
+        print(f"\n[WARNING] Top Incidents with Excessive Reassignments:")
         for _, inc in reassignment_analysis.head(5).iterrows():
             print(f"  {inc['number']}: {inc['reassignment_count']} reassignments")
             print(f"    Category: {inc.get('patternCategory', 'Unknown')}")
             print(f"    Current Group: {inc.get('assignment_group', 'Unknown')}")
 
     # Recommendations
-    print(f"\n💡 Routing Improvement Recommendations:")
+    print(f"\nRouting Improvement Recommendations:")
     worst_category = routing_by_category.index[0] if not routing_by_category.empty else None
     if worst_category and routing_by_category.loc[worst_category, 'reassignment_count'] < 60:
         print(f"  • Review routing rules for '{worst_category}' category ({routing_by_category.loc[worst_category, 'reassignment_count']:.1f}% success)")
@@ -336,35 +336,35 @@ def use_case_6_executive_dashboard():
     patterns = analyze_patterns(df)
 
     # Executive Summary
-    print(f"\n📊 EXECUTIVE SUMMARY - {datetime.now().strftime('%B %Y')}")
+    print(f"\nEXECUTIVE SUMMARY - {datetime.now().strftime('%B %Y')}")
     print("=" * 70)
 
-    print(f"\n🎯 Key Performance Indicators:")
+    print(f"\nKey Performance Indicators:")
     print(f"  Total Incidents: {len(df)}")
     print(f"  Active/Open: {backlog['total_backlog']}")
     print(f"  Resolved: {sla_metrics['total_resolved']}")
     print(f"  SLA Compliance: {100 - sla_metrics['breach_rate_pct']:.1f}%")
     print(f"  Avg Resolution Time: {resolution_analysis['overall']['mean_hrs']:.1f} hours")
 
-    print(f"\n📈 Service Quality:")
+    print(f"\nService Quality:")
     quality_score = 100 - (sla_metrics['breach_rate_pct'] * 0.5)  # Simplified scoring
-    status = "🟢 Excellent" if quality_score > 90 else "🟡 Good" if quality_score > 75 else "🔴 Needs Improvement"
+    status = "[EXCELLENT]" if quality_score > 90 else "[GOOD]" if quality_score > 75 else "[NEEDS IMPROVEMENT]"
     print(f"  Overall Score: {quality_score:.1f}% {status}")
 
-    print(f"\n📋 Top Service Issues:")
+    print(f"\nTop Service Issues:")
     for category, count in list(patterns['category_distribution'].items())[:5]:
         pct = (count / len(df)) * 100
         print(f"  • {category}: {count} incidents ({pct:.1f}%)")
 
-    print(f"\n🔍 Areas Requiring Attention:")
+    print(f"\nAreas Requiring Attention:")
     if sla_metrics['breach_rate_pct'] > 15:
-        print(f"  ⚠️  SLA breach rate ({sla_metrics['breach_rate_pct']:.1f}%) exceeds target (15%)")
+        print(f"  [WARNING] SLA breach rate ({sla_metrics['breach_rate_pct']:.1f}%) exceeds target (15%)")
     if backlog['by_age'].get('more_than_1month', 0) > 10:
-        print(f"  ⚠️  {backlog['by_age']['more_than_1month']} incidents over 1 month old in backlog")
+        print(f"  [WARNING] {backlog['by_age']['more_than_1month']} incidents over 1 month old in backlog")
     if resolution_analysis['overall']['mean_hrs'] > 48:
-        print(f"  ⚠️  Average resolution time ({resolution_analysis['overall']['mean_hrs']:.1f}h) exceeds target (48h)")
+        print(f"  [WARNING] Average resolution time ({resolution_analysis['overall']['mean_hrs']:.1f}h) exceeds target (48h)")
 
-    print(f"\n✅ Successes:")
+    print(f"\nSuccesses:")
     if sla_metrics['breach_rate_pct'] < 10:
         print(f"  • Excellent SLA compliance ({100 - sla_metrics['breach_rate_pct']:.1f}%)")
     if backlog['avg_age_days'] < 3:
@@ -373,12 +373,12 @@ def use_case_6_executive_dashboard():
     print("\n" + "="*70)
 
     # Save summary data for distribution
-    print(f"\n💾 Saving executive summary data...")
+    print(f"\nSaving executive summary data...")
     df[['number', 'priority', 'patternCategory', 'state', 'resolutionTimeHrs']].head(20).to_csv(
         'output/executive_summary_data.csv',
         index=False
     )
-    print(f"   ✅ Saved to output/executive_summary_data.csv")
+    print(f"   [OK] Saved to output/executive_summary_data.csv")
     print(f"   Note: For external distribution, run src/redact5.py on exported files")
 
 
@@ -417,7 +417,7 @@ def main():
     use_case_6_executive_dashboard()
 
     print("\n" + "="*70)
-    print("✅ All use cases completed!")
+    print("[SUCCESS] All use cases completed!")
     print("="*70)
     print("\nFor more information:")
     print("  • See docs/ITSM_WORKFLOWS.md for detailed workflow documentation")

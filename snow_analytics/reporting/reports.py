@@ -286,12 +286,19 @@ def generate_quality_report(
         return export_to_excel(sheets, output_path)
 
     elif format.lower() == 'json':
+        # Convert DataFrame to dict, handling NaT values
+        quality_issues = []
+        if not issues_df.empty:
+            # Replace NaT/NaN with None for JSON serialization
+            issues_df_clean = issues_df.replace({pd.NaT: None}).replace({pd.NA: None})
+            quality_issues = issues_df_clean.to_dict('records')
+        
         report = {
             'report_type': 'Quality Report',
             'generated_at': datetime.now().isoformat(),
             'total_incidents': len(df_quality),
             'incidents_with_issues': len(issues_df),
-            'quality_issues': issues_df.to_dict('records') if not issues_df.empty else []
+            'quality_issues': quality_issues
         }
         return export_to_json(report, output_path)
 
@@ -397,11 +404,13 @@ def generate_executive_summary(
         report = {
             'report_type': 'Executive Summary',
             'generated_at': datetime.now().isoformat(),
-            'sla_compliance': sla_metrics,
-            'backlog': backlog_metrics,
-            'resolution_times': resolution_analysis,
-            'patterns': {
-                'recurring_issues_count': len(patterns.get('recurring_issues', []))
+            'summary': {
+                'sla_compliance': sla_metrics,
+                'backlog': backlog_metrics,
+                'resolution_times': resolution_analysis,
+                'patterns': {
+                    'recurring_issues_count': len(patterns.get('recurring_issues', []))
+                }
             }
         }
         return export_to_json(report, output_path)

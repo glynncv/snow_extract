@@ -108,12 +108,50 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
         'u_ci_type': 'ci_type',
     }
 
+    # Handle duplicate column names first (API sometimes returns duplicates)
+    if df.columns.duplicated().any():
+        # Keep first occurrence of each column, drop duplicates
+        df = df.loc[:, ~df.columns.duplicated()]
+        logger.debug("Removed duplicate column names")
+
     # Only rename columns that exist
     existing_mappings = {k: v for k, v in column_mapping.items() if k in df.columns}
 
     if existing_mappings:
-        df = df.rename(columns=existing_mappings)
-        logger.debug(f"Renamed columns: {list(existing_mappings.keys())}")
+        # Handle duplicate mappings (multiple columns mapping to same name)
+        # Group by target column name and merge values
+        target_columns = {}
+        for old_col, new_col in existing_mappings.items():
+            if new_col not in target_columns:
+                target_columns[new_col] = []
+            target_columns[new_col].append(old_col)
+        
+        # For each target column, merge source columns (keep first non-null)
+        for new_col, source_cols in target_columns.items():
+            if len(source_cols) > 1:
+                # Multiple source columns map to same target
+                # Merge: use first non-null value from any source column
+                merged = df[source_cols[0]].copy()
+                for col in source_cols[1:]:
+                    if col in df.columns:
+                        # Fill nulls with values from other columns
+                        merged = merged.fillna(df[col])
+                df[new_col] = merged
+                # Drop source columns after merging
+                df = df.drop(columns=source_cols, errors='ignore')
+            else:
+                # Single source column
+                old_col = source_cols[0]
+                # Check if target column already exists
+                if new_col in df.columns and new_col != old_col:
+                    # Target exists, merge values (keep existing, fill nulls from source)
+                    df[new_col] = df[new_col].fillna(df[old_col])
+                    df = df.drop(columns=[old_col], errors='ignore')
+                else:
+                    # Target doesn't exist or is same as source, just rename
+                    df = df.rename(columns={old_col: new_col})
+        
+        logger.debug(f"Normalized columns: {list(target_columns.keys())}")
 
     return df
 

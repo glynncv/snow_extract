@@ -49,6 +49,9 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_functions = "test_*"
 addopts = "-v --cov=snow_analytics --cov-report=html --cov-report=term"
+markers = [
+    "api: marks tests that require ServiceNow API credentials (deselect with '-m \"not api\"')"
+]
 
 [tool.mypy]
 python_version = "3.8"
