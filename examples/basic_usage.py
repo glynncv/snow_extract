@@ -33,13 +33,13 @@ def main():
     print("\n1. Loading incident data...")
 
     # Option A: Load from API (requires credentials in .env or config)
-    # df = load_incidents('api', limit=100)
+    df = load_incidents('api', limit=100)
 
     # Option B: Load from CSV
     # df = load_incidents('csv', file_path='data/incidents.csv')
 
     # Option C: Generate sample data (for demonstration)
-    df = load_incidents('sample', num_records=50)
+    # df = load_incidents('sample', num_records=50)
 
     print(f"   Loaded {len(df)} incidents")
 

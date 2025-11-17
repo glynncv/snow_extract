@@ -8,14 +8,10 @@ from unittest.mock import Mock, patch, MagicMock
 import sys
 from pathlib import Path
 
-# Add src directory to path
-script_dir = Path(__file__).parent
-project_root = script_dir.parent
-src_path = project_root / "src"
-sys.path.insert(0, str(src_path))
-
-from rca_generator import ServiceNowRCAGenerator
-from rca_report_formatter import RCAReportFormatter
+# Use new package structure
+from snow_analytics.rca import RCAGenerator, RCAReportFormatter
+# Backward compatibility alias
+ServiceNowRCAGenerator = RCAGenerator
 
 
 class TestRCAGenerator(unittest.TestCase):
@@ -69,14 +65,14 @@ class TestRCAGenerator(unittest.TestCase):
             'related_changes': []
         }
     
-    @patch('rca_generator.requests.Session')
-    @patch('rca_generator.HTTPBasicAuth')
-    def test_init_with_credentials(self, mock_auth, mock_session):
+    @patch('snow_analytics.rca.generator.ServiceNowAPI')
+    def test_init_with_credentials(self, mock_api_class):
         """Test initialization with credentials"""
-        mock_session_instance = MagicMock()
-        mock_session.return_value = mock_session_instance
-        mock_session_instance.get.return_value.status_code = 200
-        mock_session_instance.get.return_value.raise_for_status = Mock()
+        mock_api = MagicMock()
+        mock_api.connect.return_value = True
+        mock_api.instance_url = 'https://test.service-now.com'
+        mock_api.session = MagicMock()
+        mock_api_class.return_value = mock_api
         
         generator = ServiceNowRCAGenerator(
             instance_url='https://test.service-now.com',
@@ -86,6 +82,7 @@ class TestRCAGenerator(unittest.TestCase):
         
         self.assertIsNotNone(generator.instance_url)
         self.assertEqual(generator.instance_url, 'https://test.service-now.com')
+        mock_api_class.assert_called_once()
     
     def test_identify_root_cause_from_resolution_notes(self):
         """Test root cause identification from resolution notes"""

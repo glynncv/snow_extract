@@ -32,7 +32,17 @@ def main():
 
     # Load and transform data
     print("\n1. Loading and transforming data...")
-    df = load_incidents('sample', num_records=200)
+    
+    # Option A: Load from API (requires credentials in .env or config)
+    
+    df = load_incidents('api', limit=200)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
+    #df = load_incidents('sample', num_records=200)
+    
     df = transform_incidents(df)
     print(f"   Loaded and transformed {len(df)} incidents")
 

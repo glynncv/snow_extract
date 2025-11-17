@@ -51,7 +51,13 @@ def use_case_1_daily_sla_report():
     # Load yesterday's incidents
     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
-    # For demo, use sample data
+    # Option A: Load from API (requires credentials in .env or config)
+    # df = load_incidents('api', limit=100)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
     df = load_incidents('sample', num_records=100)
     df = transform_incidents(df)
 
@@ -100,6 +106,13 @@ def use_case_2_backlog_management():
     print("="*70)
 
     # Load active incidents
+    # Option A: Load from API (requires credentials in .env or config)
+    # df = load_incidents('api', limit=100)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
     df = load_incidents('sample', num_records=100)
     df = transform_incidents(df)
 
@@ -153,7 +166,16 @@ def use_case_3_problem_candidate_identification():
     print("="*70)
 
     # Load historical incidents (last 30 days)
-    df = load_incidents('sample', num_records=200)
+    # Option A: Load from API (requires credentials in .env or config)
+    
+    df = load_incidents('api', limit=200)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
+    #df = load_incidents('sample', num_records=200)
+    
     df = transform_incidents(df)
 
     # Find recurring issues
@@ -199,6 +221,13 @@ def use_case_4_quality_assurance():
     print("="*70)
 
     # Load incidents
+    # Option A: Load from API (requires credentials in .env or config)
+    # df = load_incidents('api', limit=100)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
     df = load_incidents('sample', num_records=100)
     df = transform_incidents(df)
 
@@ -260,6 +289,13 @@ def use_case_5_routing_optimization():
     print("="*70)
 
     # Load incidents
+    # Option A: Load from API (requires credentials in .env or config)
+    # df = load_incidents('api', limit=150)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
     df = load_incidents('sample', num_records=150)
     df = transform_incidents(df)
 
@@ -325,6 +361,13 @@ def use_case_6_executive_dashboard():
     print("="*70)
 
     # Load last month's incidents
+    # Option A: Load from API (requires credentials in .env or config)
+    # df = load_incidents('api', limit=500)
+    
+    # Option B: Load from CSV
+    # df = load_incidents('csv', file_path='data/incidents.csv')
+    
+    # Option C: Generate sample data (for demonstration)
     df = load_incidents('sample', num_records=500)
     df = transform_incidents(df)
 

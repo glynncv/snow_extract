@@ -42,6 +42,9 @@ from snow_analytics.reporting import (
     generate_quality_report
 )
 
+# RCA (Root Cause Analysis)
+from snow_analytics.rca import RCAGenerator, RCAReportFormatter
+
 __all__ = [
     # Version
     "__version__",
@@ -68,4 +71,8 @@ __all__ = [
     "generate_backlog_report",
     "generate_executive_summary",
     "generate_quality_report",
+    
+    # RCA
+    "RCAGenerator",
+    "RCAReportFormatter",
 ]

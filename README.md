@@ -25,7 +25,11 @@ notepad .env
 
 ### 3. Test Connection
 ```powershell
-python scripts\test_servicenow_api.py
+# Test API connection using pytest
+pytest -m api
+
+# Or use the basic usage example
+python examples\basic_usage.py
 ```
 
 ## 📋 Features
@@ -64,46 +68,43 @@ python examples\reporting_example.py
 ```
 Shows: CSV/Excel/JSON exports, SLA reports, backlog reports, quality reports, executive summaries
 
-### Legacy Scripts (Old Structure)
+### Using the New Package
 
-> **Note:** The project has been refactored into a modular package. See `README_REFACTORED.md` for the new structure. The scripts below are from the old structure and may still work but are not recommended for new projects.
+The project has been refactored into a modular `snow_analytics` package. Use the examples above or import directly:
 
-#### Extract from ServiceNow API
-```powershell
-# Extract 100 recent network incidents
-python scripts\real_data_extraction.py --api --sample-size 100
+```python
+from snow_analytics import load_incidents, transform_incidents
 
-# Extract with custom filter
-python scripts\real_data_extraction.py --api --query "assignment_groupLIKEnetwork^priorityIN1,2"
+# Load from API
+df = load_incidents('api', limit=100)
+
+# Load from CSV
+df = load_incidents('csv', file_path='data/incidents.csv')
+
+# Transform data
+df = transform_incidents(df)
 ```
 
-#### Process Local Files
-```powershell
-# Process existing data file
-python scripts\real_data_extraction.py --file data\raw\incidents.csv
-
-# Process with full ETL pipeline
-python scripts\real_data_extraction.py --file data\raw\incidents.csv --apply-etl --redact-pii
-```
-
-#### Sample Data Testing
-```powershell
-# Generate sample data for testing
-python scripts\servicenow_extraction_improved.py
-```
+> **Note:** Legacy scripts have been moved to `scripts/archived/`. See `README_REFACTORED.md` for the complete guide to the new structure.
 
 ## 📁 Project Structure
 
 ```
 snow_extract/
-├── src/                    # Source code modules
-│   ├── network_incident_etl.py    # ETL transformations
-│   ├── redact5.py                 # PII redaction
-│   └── config_manager.py          # Configuration management
-├── scripts/                # Executable scripts
-│   ├── real_data_extraction.py    # Main extraction script
-│   ├── test_servicenow_api.py    # API connection test
-│   └── servicenow_extraction_improved.py  # Sample data generator
+├── src/                    # Source utilities (mixed legacy/active)
+│   ├── redact5.py                 # PII redaction utility (active)
+│   ├── rca_generator.py           # RCA generator (legacy, pending migration)
+│   ├── rca_report_formatter.py    # RCA formatter (legacy, pending migration)
+│   └── archived/                  # Deprecated modules
+│       ├── network_incident_etl.py    # → snow_analytics/core/transform.py
+│       └── config_manager.py          # → snow_analytics/core/config.py
+├── scripts/                # Legacy scripts (archived)
+│   └── archived/          # Deprecated scripts - see README_REFACTORED.md
+├── examples/               # Example scripts (recommended)
+│   ├── basic_usage.py     # Basic workflow example
+│   ├── itsm_use_cases.py  # Real-world ITSM scenarios
+│   └── reporting_example.py  # Report generation examples
+├── snow_analytics/         # Main package (new structure)
 ├── data/                   # Data directories
 │   ├── raw/               # Original data files
 │   ├── processed/         # Transformed data
@@ -175,14 +176,31 @@ The `redact5.py` module handles:
 
 ## 🧪 Testing
 
-### Test API Connection
+### Run All Tests
 ```powershell
-python scripts\test_servicenow_api.py
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=snow_analytics
+
+# Run API tests (requires credentials)
+pytest -m api
+
+# Run specific test file
+pytest tests/test_loaders.py
 ```
 
-### Validate Sample Data
+### Example Scripts
 ```powershell
-python servicenow_extraction_improved.py
+# Basic usage example
+python examples\basic_usage.py
+
+# ITSM use cases
+python examples\itsm_use_cases.py
+
+# Reporting examples
+python examples\reporting_example.py
 ```
 
 ## 🔐 Security

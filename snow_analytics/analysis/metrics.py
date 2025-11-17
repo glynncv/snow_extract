@@ -174,19 +174,21 @@ def analyze_resolution_times(
 
 def calculate_backlog_metrics(
     df: pd.DataFrame,
-    snapshot_date: Optional[datetime] = None
+    snapshot_date: Optional[datetime] = None,
+    min_age_days: int = 10
 ) -> Dict[str, Any]:
     """
-    Calculate backlog metrics for active incidents.
+    Calculate backlog metrics for open incidents older than threshold.
 
     Args:
         df: DataFrame with incident data
         snapshot_date: Date for snapshot (defaults to now)
+        min_age_days: Minimum age in days to be considered backlog (default: 10)
 
     Returns:
         Dictionary with backlog metrics
     """
-    logger.info("Calculating backlog metrics")
+    logger.info(f"Calculating backlog metrics (min_age_days={min_age_days})")
 
     if snapshot_date is None:
         snapshot_date = datetime.now()
@@ -194,6 +196,7 @@ def calculate_backlog_metrics(
     metrics = {
         'snapshot_date': snapshot_date.isoformat(),
         'total_backlog': 0,
+        'min_age_days': min_age_days,
         'by_priority': {},
         'by_age': {
             'less_than_24h': 0,
@@ -205,50 +208,64 @@ def calculate_backlog_metrics(
         'avg_age_days': 0.0
     }
 
-    # Filter to active incidents
-    if 'isActive' not in df.columns:
-        logger.warning("isActive column not found. Run transform_incidents() first.")
+    # Filter to open (not resolved) incidents
+    if 'isResolved' not in df.columns and 'isActive' not in df.columns:
+        logger.warning("isResolved or isActive column not found. Run transform_incidents() first.")
         return metrics
 
-    active_df = df[df['isActive']].copy()
+    # Use isResolved if available, otherwise fall back to isActive
+    if 'isResolved' in df.columns:
+        open_df = df[~df['isResolved']].copy()
+    else:
+        # Fallback to isActive if isResolved not available
+        open_df = df[df['isActive']].copy()
 
-    if active_df.empty:
-        logger.info("No active incidents in backlog")
+    if open_df.empty:
+        logger.info("No open incidents found")
         return metrics
 
-    metrics['total_backlog'] = len(active_df)
+    # Calculate age for each open incident
+    if 'openedDate' not in open_df.columns:
+        logger.warning("openedDate column not found. Cannot calculate backlog age.")
+        return metrics
 
-    # Calculate age for each active incident
-    if 'openedDate' in active_df.columns:
-        active_df['current_age_days'] = (
-            pd.Timestamp(snapshot_date) - active_df['openedDate']
-        ).dt.total_seconds() / (3600 * 24)
+    open_df['current_age_days'] = (
+        pd.Timestamp(snapshot_date) - open_df['openedDate']
+    ).dt.total_seconds() / (3600 * 24)
 
-        metrics['avg_age_days'] = round(active_df['current_age_days'].mean(), 2)
+    # Filter to incidents older than min_age_days (backlog definition)
+    backlog_df = open_df[open_df['current_age_days'] > min_age_days].copy()
 
-        # Age distribution
-        metrics['by_age']['less_than_24h'] = int((active_df['current_age_days'] < 1).sum())
-        metrics['by_age']['24h_to_3days'] = int(
-            ((active_df['current_age_days'] >= 1) & (active_df['current_age_days'] < 3)).sum()
-        )
-        metrics['by_age']['3days_to_1week'] = int(
-            ((active_df['current_age_days'] >= 3) & (active_df['current_age_days'] < 7)).sum()
-        )
-        metrics['by_age']['1week_to_1month'] = int(
-            ((active_df['current_age_days'] >= 7) & (active_df['current_age_days'] < 30)).sum()
-        )
-        metrics['by_age']['more_than_1month'] = int((active_df['current_age_days'] >= 30).sum())
+    if backlog_df.empty:
+        logger.info(f"No incidents older than {min_age_days} days in backlog")
+        return metrics
 
-    # By priority
-    if 'priority' in active_df.columns:
-        for priority in active_df['priority'].unique():
+    metrics['total_backlog'] = len(backlog_df)
+    metrics['avg_age_days'] = round(backlog_df['current_age_days'].mean(), 2)
+
+    # Age distribution (for all open incidents, not just backlog)
+    metrics['by_age']['less_than_24h'] = int((open_df['current_age_days'] < 1).sum())
+    metrics['by_age']['24h_to_3days'] = int(
+        ((open_df['current_age_days'] >= 1) & (open_df['current_age_days'] < 3)).sum()
+    )
+    metrics['by_age']['3days_to_1week'] = int(
+        ((open_df['current_age_days'] >= 3) & (open_df['current_age_days'] < 7)).sum()
+    )
+    metrics['by_age']['1week_to_1month'] = int(
+        ((open_df['current_age_days'] >= 7) & (open_df['current_age_days'] < 30)).sum()
+    )
+    metrics['by_age']['more_than_1month'] = int((open_df['current_age_days'] >= 30).sum())
+
+    # By priority (for backlog incidents only)
+    if 'priority' in backlog_df.columns:
+        for priority in backlog_df['priority'].unique():
             if pd.isna(priority):
                 continue
 
-            priority_count = len(active_df[active_df['priority'] == priority])
+            priority_count = len(backlog_df[backlog_df['priority'] == priority])
             metrics['by_priority'][str(priority)] = priority_count
 
-    logger.info(f"Total backlog: {metrics['total_backlog']} incidents (avg age: {metrics['avg_age_days']} days)")
+    logger.info(f"Total backlog: {metrics['total_backlog']} incidents (avg age: {metrics['avg_age_days']} days, min_age: {min_age_days} days)")
 
     return metrics
 

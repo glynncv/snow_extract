@@ -103,6 +103,8 @@ def flag_excessive_reassignments(df: pd.DataFrame, threshold: int = 3) -> pd.Dat
     df_check['quality_excessive_reassignments'] = False
 
     if 'reassignment_count' in df_check.columns:
-        df_check.loc[df_check['reassignment_count'] > threshold, 'quality_excessive_reassignments'] = True
+        # Convert to numeric (handles string values from API)
+        reassignment_count = pd.to_numeric(df_check['reassignment_count'], errors='coerce')
+        df_check.loc[reassignment_count > threshold, 'quality_excessive_reassignments'] = True
 
     return df_check

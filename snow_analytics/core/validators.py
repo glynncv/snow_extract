@@ -50,6 +50,12 @@ def validate_incident_schema(
         issues.append("DataFrame is empty")
         return False, issues
 
+    # Handle duplicate column names (API sometimes returns duplicates)
+    if df.columns.duplicated().any():
+        # Keep first occurrence of each column, drop duplicates
+        df = df.loc[:, ~df.columns.duplicated()]
+        logger.debug("Removed duplicate column names during validation")
+
     # Check for required columns
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
@@ -63,7 +69,22 @@ def validate_incident_schema(
             logger.warning(issue)
 
     # Check for completely null columns
-    null_columns = [col for col in df.columns if df[col].isna().all()]
+    # Handle case where df[col] might return DataFrame (duplicate columns)
+    null_columns = []
+    for col in df.columns:
+        try:
+            col_data = df[col]
+            # If it's a DataFrame (duplicate columns), check all columns
+            if isinstance(col_data, pd.DataFrame):
+                if col_data.isna().all().all():
+                    null_columns.append(col)
+            # If it's a Series, check normally
+            elif isinstance(col_data, pd.Series):
+                if col_data.isna().all():
+                    null_columns.append(col)
+        except Exception as e:
+            logger.debug(f"Could not check null status for column {col}: {e}")
+    
     if null_columns:
         issue = f"Columns with all null values: {null_columns}"
         issues.append(issue)

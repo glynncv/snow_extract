@@ -404,7 +404,7 @@ metrics = calculate_sla_metrics(df)
 
 ### Backward Compatibility
 
-Old scripts in `scripts/` folder still work but are **deprecated**. They will be moved to `scripts/archived/` in future releases.
+Old scripts have been moved to `scripts/archived/` and are **deprecated**. They are kept for reference only. Use the new `snow_analytics` package and `examples/` scripts instead.
 
 ---
 
@@ -455,10 +455,10 @@ Old scripts in `scripts/` folder still work but are **deprecated**. They will be
 4. ✅ Read README_REFACTORED.md
 
 ### Short Term
-1. Archive old scripts: `mv scripts scripts_archived`
-2. Add more tests for edge cases
-3. Implement CLI (currently placeholder)
-4. Create RCA modules (refactor from existing)
+1. ✅ Archive old scripts: Moved to `scripts/archived/` (November 2025)
+2. ✅ Migrate RCA modules: Moved to `snow_analytics/rca/` (November 2025)
+3. Add more tests for edge cases
+4. Implement CLI (currently placeholder)
 5. Add visualization utilities
 
 ### Long Term

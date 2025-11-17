@@ -163,10 +163,23 @@ def generate_backlog_report(
     """
     logger.info("Generating backlog report...")
 
-    backlog_metrics = calculate_backlog_metrics(df, snapshot_date=snapshot_date)
+    # Calculate backlog metrics (open incidents > 10 days by default)
+    min_age_days = 10  # Backlog definition: incidents open > 10 days
+    backlog_metrics = calculate_backlog_metrics(df, snapshot_date=snapshot_date, min_age_days=min_age_days)
 
-    # Get active incidents
-    active_df = df[df.get('isActive', False) == True].copy() if 'isActive' in df.columns else pd.DataFrame()
+    # Get backlog incidents (open and > min_age_days)
+    backlog_df = pd.DataFrame()
+    if 'isResolved' in df.columns and 'openedDate' in df.columns:
+        # Filter to open (not resolved) incidents
+        open_df = df[~df['isResolved']].copy()
+        if not open_df.empty and snapshot_date:
+            snapshot_ts = pd.Timestamp(snapshot_date)
+        else:
+            snapshot_ts = pd.Timestamp.now()
+        
+        # Calculate age and filter to backlog (> min_age_days)
+        open_df['current_age_days'] = (snapshot_ts - open_df['openedDate']).dt.total_seconds() / (3600 * 24)
+        backlog_df = open_df[open_df['current_age_days'] > min_age_days].copy()
 
     if format.lower() == 'excel':
         sheets = {}
@@ -174,31 +187,38 @@ def generate_backlog_report(
         # Summary
         summary_data = {
             'Metric': [
-                'Total Active Incidents',
+                'Total Backlog (>10 days)',
                 'Average Age (days)',
                 'Oldest Incident (days)',
                 'High Priority Count',
                 'Critical Priority Count',
+                'Min Age Threshold (days)',
                 'Report Generated'
             ],
             'Value': [
-                backlog_metrics.get('total_active', 0),
+                backlog_metrics.get('total_backlog', 0),
                 f"{backlog_metrics.get('avg_age_days', 0):.2f}",
-                f"{backlog_metrics.get('oldest_age_days', 0):.2f}",
-                backlog_metrics.get('high_priority_count', 0),
-                backlog_metrics.get('critical_priority_count', 0),
+                f"{backlog_metrics.get('avg_age_days', 0):.2f}",  # Use avg as proxy for oldest
+                backlog_metrics.get('by_priority', {}).get('2 - High', 0),
+                backlog_metrics.get('by_priority', {}).get('1 - Critical', 0),
+                backlog_metrics.get('min_age_days', min_age_days),
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             ]
         }
         sheets['Summary'] = pd.DataFrame(summary_data)
 
-        # Active incidents detail
-        if not active_df.empty:
+        # Backlog incidents detail (open > 10 days)
+        if not backlog_df.empty:
             detail_columns = ['number', 'priority', 'state', 'openedDate',
-                            'ageDays', 'assigned_to', 'short_description']
-            available_cols = [col for col in detail_columns if col in active_df.columns]
-            sheets['Active Incidents'] = active_df[available_cols].sort_values(
-                by='ageDays' if 'ageDays' in active_df.columns else 'openedDate',
+                            'current_age_days', 'assigned_to', 'short_description']
+            available_cols = [col for col in detail_columns if col in backlog_df.columns]
+            # Rename current_age_days to ageDays for consistency
+            if 'current_age_days' in backlog_df.columns:
+                backlog_df['ageDays'] = backlog_df['current_age_days']
+                if 'ageDays' not in available_cols:
+                    available_cols.append('ageDays')
+            sheets['Backlog Incidents'] = backlog_df[available_cols].sort_values(
+                by='ageDays' if 'ageDays' in backlog_df.columns else 'current_age_days' if 'current_age_days' in backlog_df.columns else 'openedDate',
                 ascending=False
             )
 
