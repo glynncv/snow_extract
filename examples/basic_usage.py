@@ -3,8 +3,15 @@ Basic Usage Example
 ==================
 
 Demonstrates basic usage of the ServiceNow Analytics toolkit.
+
+Usage:
+    python basic_usage.py                           # Use sample data (default)
+    python basic_usage.py --source sample           # Generate sample data
+    python basic_usage.py --source csv --file data/incidents.csv
+    python basic_usage.py --source api --limit 100
 """
 
+import argparse
 from snow_analytics import (
     load_incidents,
     transform_incidents,
@@ -19,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main(source='sample', file_path=None, limit=100, num_records=50):
     """Run basic extraction and analysis pipeline."""
 
     print("="*70)
@@ -30,16 +37,16 @@ def main():
     config = Config()
 
     # Step 1: Load incidents
-    print("\n1. Loading incident data...")
+    print(f"\n1. Loading incident data from '{source}'...")
 
-    # Option A: Load from API (requires credentials in .env or config)
-    df = load_incidents('api', limit=100)
-
-    # Option B: Load from CSV
-    # df = load_incidents('csv', file_path='data/incidents.csv')
-
-    # Option C: Generate sample data (for demonstration)
-    # df = load_incidents('sample', num_records=50)
+    if source == 'api':
+        df = load_incidents('api', limit=limit)
+    elif source == 'csv':
+        if not file_path:
+            raise ValueError("--file required when using --source csv")
+        df = load_incidents('csv', file_path=file_path)
+    else:  # sample
+        df = load_incidents('sample', num_records=num_records)
 
     print(f"   Loaded {len(df)} incidents")
 
@@ -98,4 +105,45 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        description='ServiceNow Analytics - Basic Usage Example',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                                    # Use sample data (default)
+  %(prog)s --source sample --num-records 100  # Generate 100 sample records
+  %(prog)s --source csv --file data/incidents.csv
+  %(prog)s --source api --limit 500
+        """
+    )
+    parser.add_argument(
+        '--source',
+        choices=['sample', 'csv', 'api'],
+        default='sample',
+        help='Data source (default: sample)'
+    )
+    parser.add_argument(
+        '--file',
+        help='CSV file path (required for --source csv)'
+    )
+    parser.add_argument(
+        '--limit',
+        type=int,
+        default=100,
+        help='Max records to load from API (default: 100)'
+    )
+    parser.add_argument(
+        '--num-records',
+        type=int,
+        default=50,
+        help='Number of sample records to generate (default: 50)'
+    )
+
+    args = parser.parse_args()
+
+    main(
+        source=args.source,
+        file_path=args.file,
+        limit=args.limit,
+        num_records=args.num_records
+    )
